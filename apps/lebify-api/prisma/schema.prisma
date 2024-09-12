@@ -1,0 +1,116 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String 
+  lastLogin DateTime?
+
+  savedTracks SavedTrack[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Track {
+  id        String    @id @default(cuid())
+  title     String
+  durationMs Int
+  releaseDate String
+  releaseDatePrecision ReleaseDatePrecision
+  trackNumber Int?
+  
+  album     Album     @relation(fields: [albumId], references: [id])
+  albumId   String
+  artists   Artist[]  @relation(references: [id])
+  savedBy   SavedTrack[]
+  tags      Tag[]     @relation(references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model SavedTrack {
+  id        String    @id @default(cuid())
+  track     Track     @relation(fields: [trackId], references: [id])
+  trackId   String
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String
+  tags      Tag[]     @relation(references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Album {
+  id        String    @id @default(cuid())
+  title     String
+  releaseDate String
+  releaseDatePrecision ReleaseDatePrecision
+  type     AlbumType
+  amountOfTracks Int
+
+  tracks    Track[]
+  artists   Artist[]  @relation(references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Artist {
+  id        String    @id @default(cuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  imageSrc  String?
+  albums    Album[]   @relation(references: [id])
+  tracks    Track[]   @relation(references: [id])
+}
+
+model Tag {
+  id        String    @id @default(cuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  savedTracks SavedTrack[] @relation(references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+}
+
+model MagicPlaylist {
+  id        String    @id @default(cuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  tracks    Track[]   @relation(references: [id])
+  user      User     @relation(fields: [userId], references : [id])
+  userId    String
+}
+
+enum ReleaseDatePrecision {
+  YEAR
+  MONTH
+  DAY
+}
+
+enum AlbumType {
+  ALBUM
+  SINGLE
+  COMPILATION
+  EP
+}
+
+enum Source
